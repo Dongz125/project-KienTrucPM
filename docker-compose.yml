@@ -1,7 +1,21 @@
 name: promptpal
+
+# I have no clue what the hell this does
+networks:
+  rabbitmq_network:
+    driver: bridge
+
 services:
   rabbitmq:
     build: "./message_broker/"
+    container_name: "rabbitmq"
+    hostname: "rabbitmq"
+    networks: [rabbitmq_network]
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
     ports:
       - 5552:5552
       - 15672:15672
