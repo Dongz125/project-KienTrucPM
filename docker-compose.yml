@@ -20,6 +20,8 @@ services:
       - 5552:5552
       - 15672:15672
       - 5672:5672
+    volumes:
+      - "./volumes/rabbitmq:/var/lib/rabbitmq/mnesia" # Mounts the data so it's not lost after container restarts
     command: >
       /bin/bash -c "
         rabbitmq-server &
@@ -31,3 +33,15 @@ services:
         rabbitmqadmin set_permissions -p message-tester user=test-consumer configure='^$' write='^$' read='^test$'
         rabbitmqadmin declare exchange name=test type=fanout vhost=message-tester
         wait"
+
+  api-gateway:
+    build: ./api_gateway/
+    container_name: "api-gateway"
+    hostname: "gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://localhost:80/hello"]
+      interval: 30s
+      timeout: 30s
+      retries: 10
+    ports:
+      - 80:80
