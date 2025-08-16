@@ -1,0 +1,19 @@
+name: promptpal
+services:
+  rabbitmq:
+    build: "./message_broker/"
+    ports:
+      - 5552:5552
+      - 15672:15672
+      - 5672:5672
+    command: >
+      /bin/bash -c "
+        rabbitmq-server &
+        until rabbitmq-diagnostics -q wait --timeout 60; do sleep 1; done;
+        rabbitmqadmin declare user name=test-producer password=password
+        rabbitmqadmin declare user name=test-consumer password=password
+        rabbitmqadmin declare vhost name=message-tester
+        rabbitmqadmin set_permissions -p message-tester user=test-producer configure='^test$' write='^test$' read='^$'
+        rabbitmqadmin set_permissions -p message-tester user=test-consumer configure='^$' write='^$' read='^test$'
+        rabbitmqadmin declare exchange name=test type=fanout vhost=message-tester
+        wait"
