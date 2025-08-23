@@ -1,0 +1,47 @@
+name: promptpal
+
+# I have no clue what the hell this does
+networks:
+  rabbitmq_network:
+    driver: bridge
+
+services:
+  rabbitmq:
+    build: "./message_broker/"
+    container_name: "rabbitmq"
+    hostname: "rabbitmq"
+    networks: [rabbitmq_network]
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    ports:
+      - 5552:5552
+      - 15672:15672
+      - 5672:5672
+    volumes:
+      - "./volumes/rabbitmq:/var/lib/rabbitmq/mnesia" # Mounts the data so it's not lost after container restarts
+    command: >
+      /bin/bash -c "
+        rabbitmq-server &
+        until rabbitmq-diagnostics -q wait --timeout 60; do sleep 1; done;
+        rabbitmqadmin declare user name=test-producer password=password
+        rabbitmqadmin declare user name=test-consumer password=password
+        rabbitmqadmin declare vhost name=message-tester
+        rabbitmqadmin set_permissions -p message-tester user=test-producer configure='^test$' write='^test$' read='^$'
+        rabbitmqadmin set_permissions -p message-tester user=test-consumer configure='^$' write='^$' read='^test$'
+        rabbitmqadmin declare exchange name=test type=fanout vhost=message-tester
+        wait"
+
+  api-gateway:
+    build: ./api_gateway/
+    container_name: "api-gateway"
+    hostname: "gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://localhost:80/hello"]
+      interval: 30s
+      timeout: 30s
+      retries: 10
+    ports:
+      - 80:80
