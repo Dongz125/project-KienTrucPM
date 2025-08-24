@@ -32,6 +32,15 @@ Services in a compose-stack are hidden behind a _hostname_. To connect to rabbit
 
 </details>
 
+<details>
+<summary>NPM new packages don't load</summary>
+
+Docker images after building are immutable. We can only change the source file of what is running, not the dependencies. Delete the image with `docker image remove` (use `docker image ls` to see what images are installed) to reset docker.
+
+For example, if you want to add a new package to `data-transformation-service`, you need to `docker image remove promptpal-data-transformation-service`, then run compose again to rebuild the dependencies.
+
+</details>
+
 ## Ports Overview
 
 These are the ports used by the application:
@@ -47,3 +56,4 @@ These are the ports used by the application:
 |    27017    | MongoDB                              |
 |    27018    | Mongo Express (GUI for MongoDB)      |
 |    3000     | Data Transformation Service (NodeJS) |
+|    5173     | Frontend Service (Vite + React)      |
