@@ -16,17 +16,32 @@ To shut down containers after:
 docker compose down
 ```
 
+## Technical points
+
+<details>
+<summary>What is the volumes folder?</summary>
+
+Docker images and containers don't have a storage. You need to specify that storage somewhere. Volumes is how we do that. They are just essentially where containers store their data into.
+
+</details>
+
+<details>
+<summary></summary>
+
+</details>
+
 ## Ports Overview
 
 These are the ports used by the application:
 
-|    Port     | Service                         |
-| :---------: | ------------------------------- |
-|    5432     | PostgreSQL                      |
-|  80 (HTTP)  | API Gateway                     |
-| 443 (HTTPS) | _Reserved for future use_       |
-|    5552     | RabbitMQ's streaming port       |
-|    5672     | RabbitMQ's messaging AMQP port  |
-|    15672    | RabbitMQ's admin panel          |
-|    27017    | MongoDB                         |
-|    27018    | Mongo Express (GUI for MongoDB) |
+|    Port     | Service                              |
+| :---------: | ------------------------------------ |
+|    5432     | PostgreSQL                           |
+|  80 (HTTP)  | API Gateway                          |
+| 443 (HTTPS) | _Reserved for future use_            |
+|    5552     | RabbitMQ's streaming port            |
+|    5672     | RabbitMQ's messaging AMQP port       |
+|    15672    | RabbitMQ's admin panel               |
+|    27017    | MongoDB                              |
+|    27018    | Mongo Express (GUI for MongoDB)      |
+|    3000     | Data Transformation Service (NodeJS) |

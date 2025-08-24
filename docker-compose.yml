@@ -14,27 +14,16 @@ services:
     hostname: "rabbitmq"
     networks: [rabbitmq_network]
     healthcheck:
-      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 30s
       timeout: 30s
-      retries: 3
+      retries: 5
     ports:
       - 5552:5552
       - 15672:15672
       - 5672:5672
     volumes:
       - "./volumes/rabbitmq:/var/lib/rabbitmq/mnesia" # Mounts the data so it's not lost after container restarts
-    command: >
-      /bin/bash -c "
-        rabbitmq-server &
-        until rabbitmq-diagnostics -q wait --timeout 60; do sleep 1; done;
-        rabbitmqadmin declare user name=test-producer password=password
-        rabbitmqadmin declare user name=test-consumer password=password
-        rabbitmqadmin declare vhost name=message-tester
-        rabbitmqadmin set_permissions -p message-tester user=test-producer configure='^test$' write='^test$' read='^$'
-        rabbitmqadmin set_permissions -p message-tester user=test-consumer configure='^$' write='^$' read='^test$'
-        rabbitmqadmin declare exchange name=test type=fanout vhost=message-tester
-        wait"
 
   postgres:
     build: "./postgres/"
@@ -80,6 +69,29 @@ services:
     ports:
       - 27018:8081
 
+  data-transformation-service:
+    build: ./data_transformation_service/
+    env_file: ./data_transformation_service/.env
+    container_name: "data-transformation-service"
+    hostname: "data-transformation-service"
+    networks: ["rabbitmq_network", "db_network"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://localhost:3000/health"]
+      interval: 30s
+      timeout: 30s
+      retries: 10
+    ports:
+      - 3000:3000
+    volumes:
+      - ./data_transformation_service/server.js:/app/server.js # live reload server.js
+      - ./data_transformation_service/src:/app/src # live reload
+      - ./data_transformation_service/.env:/app/.env # live reload .env file
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      api-gateway:
+        condition: service_healthy
+
   api-gateway:
     build: ./api_gateway/
     container_name: "api-gateway"
@@ -92,3 +104,6 @@ services:
       retries: 10
     ports:
       - 80:80
+    volumes:
+      - ./api_gateway/src:/app/src
+      - ./api_gateway/go.mod:/app/go.mod
