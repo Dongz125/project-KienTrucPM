@@ -26,7 +26,9 @@ Docker images and containers don't have a storage. You need to specify that stor
 </details>
 
 <details>
-<summary></summary>
+<summary>Services can't connect</summary>
+
+Services in a compose-stack are hidden behind a _hostname_. To connect to rabbitmq, for example, you can't use `localhost:5672`, but you need to use `rabbitmq:5672`. Same goes with `postgres:5432`.
 
 </details>
 
