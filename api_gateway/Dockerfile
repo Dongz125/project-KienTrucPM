@@ -4,6 +4,7 @@ EXPOSE 80
 
 # Copy go.mod and go.sum to cache dependencies
 COPY go.mod ./
+COPY go.sum ./
 
 # Download dependencies
 RUN go mod download
