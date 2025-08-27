@@ -4,6 +4,10 @@ name: promptpal
 networks:
   rabbitmq_network:
     driver: bridge
+  db_network:
+    driver: bridge
+  api_network:
+    driver: bridge
 
 services:
   rabbitmq:
@@ -12,36 +16,116 @@ services:
     hostname: "rabbitmq"
     networks: [rabbitmq_network]
     healthcheck:
-      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 30s
-      timeout: 30s
-      retries: 3
+      timeout: 10s
+      retries: 5
     ports:
       - 5552:5552
       - 15672:15672
       - 5672:5672
     volumes:
       - "./volumes/rabbitmq:/var/lib/rabbitmq/mnesia" # Mounts the data so it's not lost after container restarts
-    command: >
-      /bin/bash -c "
-        rabbitmq-server &
-        until rabbitmq-diagnostics -q wait --timeout 60; do sleep 1; done;
-        rabbitmqadmin declare user name=test-producer password=password
-        rabbitmqadmin declare user name=test-consumer password=password
-        rabbitmqadmin declare vhost name=message-tester
-        rabbitmqadmin set_permissions -p message-tester user=test-producer configure='^test$' write='^test$' read='^$'
-        rabbitmqadmin set_permissions -p message-tester user=test-consumer configure='^$' write='^$' read='^test$'
-        rabbitmqadmin declare exchange name=test type=fanout vhost=message-tester
-        wait"
+
+  postgres:
+    build: "./postgres/"
+    container_name: "postgres"
+    hostname: "postgres"
+    networks: ["db_network"]
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASS}
+      POSTGRES_DB: promptpal
+    volumes:
+      - ./volumes/postgres:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+  mongo:
+    image: "mongo:8-noble"
+    container_name: "mongo"
+    hostname: "mongo"
+    networks: ["db_network"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASS}
+    volumes:
+      - ./volumes/mongo:/data/db
+    ports:
+      - 27017:27017
+
+  mongo-express:
+    image: "mongo-express:1.0-20-alpine3.19"
+    container_name: "mongo-express"
+    hostname: "mongo-express"
+    networks: ["db_network"]
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASS}
+    ports:
+      - 27018:8081
+
+  data-transformation-service:
+    build: ./data_transformation_service/
+    container_name: "data-transformation-service"
+    hostname: "data-transformation-service"
+    networks: ["rabbitmq_network", "db_network", "api_network"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://localhost:3000/health"]
+      interval: 30s
+      timeout: 30s
+      retries: 10
+    ports:
+      - 3000:3000
+    volumes:
+      - ./data_transformation_service/server.js:/app/server.js # live reload server.js
+      - ./data_transformation_service/src:/app/src # live reload
+      - ./data_transformation_service/.env:/app/.env # live reload .env file
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      api-gateway:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend/
+    container_name: "frontend"
+    hostname: "frontend"
+    networks: ["api_network"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://localhost:5173/"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    ports:
+      - 5173:5173
+    volumes:
+      - ./frontend/public:/app/public
+      - ./frontend/.env:/app/.env
+      - ./frontend/src:/app/src
+      - ./frontend/index.html:/app/index.html
 
   api-gateway:
     build: ./api_gateway/
     container_name: "api-gateway"
     hostname: "gateway"
+    networks: ["api_network"]
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      DATA_TRANSFORMATION_SERVICE: ${DATA_TRANSFORMATION_SERVICE}
     healthcheck:
-      test: ["CMD-SHELL", "curl http://localhost:80/hello"]
+      test: ["CMD-SHELL", "curl http://localhost:80/health"]
       interval: 30s
       timeout: 30s
       retries: 10
     ports:
       - 80:80
+    volumes:
+      - ./api_gateway/src:/app/src
+      - ./api_gateway/go.mod:/app/go.mod
