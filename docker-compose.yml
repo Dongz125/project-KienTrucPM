@@ -73,10 +73,9 @@ services:
 
   data-transformation-service:
     build: ./data_transformation_service/
-    env_file: ./data_transformation_service/.env
     container_name: "data-transformation-service"
     hostname: "data-transformation-service"
-    networks: ["rabbitmq_network", "db_network"]
+    networks: ["rabbitmq_network", "db_network", "api_network"]
     healthcheck:
       test: ["CMD-SHELL", "curl http://localhost:3000/health"]
       interval: 30s
@@ -116,9 +115,12 @@ services:
     build: ./api_gateway/
     container_name: "api-gateway"
     hostname: "gateway"
-    networks: ["rabbitmq_network", "api_network"]
+    networks: ["api_network"]
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      DATA_TRANSFORMATION_SERVICE: ${DATA_TRANSFORMATION_SERVICE}
     healthcheck:
-      test: ["CMD-SHELL", "curl http://localhost:80/hello"]
+      test: ["CMD-SHELL", "curl http://localhost:80/health"]
       interval: 30s
       timeout: 30s
       retries: 10
