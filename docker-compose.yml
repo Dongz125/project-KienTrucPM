@@ -46,6 +46,12 @@ services:
     ports:
       - 5432:5432
 
+  redis:
+    image: "redis:8-alpine"
+    container_name: "redis"
+    hostname: "redis"
+    networks: ["db_network"]
+
   mongo:
     image: "mongo:8-noble"
     container_name: "mongo"
@@ -71,6 +77,19 @@ services:
     ports:
       - 27018:8081
 
+  authentication-service:
+    build: ./authentication_service/
+    container_name: "authentication-service"
+    hostname: "authentication-service"
+    networks: ["db_network", "api_network"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    ports:
+      - 3001:3001
+
   data-transformation-service:
     build: ./data_transformation_service/
     container_name: "data-transformation-service"
@@ -89,8 +108,6 @@ services:
       - ./data_transformation_service/.env:/app/.env # live reload .env file
     depends_on:
       rabbitmq:
-        condition: service_healthy
-      api-gateway:
         condition: service_healthy
 
   frontend:
@@ -129,3 +146,8 @@ services:
     volumes:
       - ./api_gateway/src:/app/src
       - ./api_gateway/go.mod:/app/go.mod
+    depends_on:
+      data-transformation-service:
+        condition: service_healthy
+      authentication-service:
+        condition: service_healthy

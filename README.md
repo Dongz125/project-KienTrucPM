@@ -56,4 +56,14 @@ These are the ports used by the application:
 |    27017    | MongoDB                              |
 |    27018    | Mongo Express (GUI for MongoDB)      |
 |    3000     | Data Transformation Service (NodeJS) |
+| 3001 | Authentication Service (NodeJS)             |
 |    5173     | Frontend Service (Vite + React)      |
+
+
+## Networks Overview
+
+There are mainly three networks in the Docker Compose stack:
+- `api_network`: Those that interact with API gateway: Data Transformation, Frontend, Authentication
+- `db_network`: Those that interact with databases: Authentication
+- `rabbitmq_network`: Those that interact with RabbitMQ pipelines.
+
