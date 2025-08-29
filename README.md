@@ -30,6 +30,8 @@ Docker images and containers don't have a storage. You need to specify that stor
 
 Services in a compose-stack are hidden behind a _hostname_. To connect to rabbitmq, for example, you can't use `localhost:5672`, but you need to use `rabbitmq:5672`. Same goes with `postgres:5432`.
 
+Also make sure that all your containers are at a healthy status. Check with `docker ps`.
+
 </details>
 
 <details>
@@ -53,17 +55,17 @@ These are the ports used by the application:
 |    5552     | RabbitMQ's streaming port            |
 |    5672     | RabbitMQ's messaging AMQP port       |
 |    15672    | RabbitMQ's admin panel               |
+|    6379     | Redis                                |
 |    27017    | MongoDB                              |
 |    27018    | Mongo Express (GUI for MongoDB)      |
 |    3000     | Data Transformation Service (NodeJS) |
-| 3001 | Authentication Service (NodeJS)             |
+|    3001     | Authentication Service (NodeJS)      |
 |    5173     | Frontend Service (Vite + React)      |
-
 
 ## Networks Overview
 
 There are mainly three networks in the Docker Compose stack:
+
 - `api_network`: Those that interact with API gateway: Data Transformation, Frontend, Authentication
 - `db_network`: Those that interact with databases: Authentication
 - `rabbitmq_network`: Those that interact with RabbitMQ pipelines.
-
