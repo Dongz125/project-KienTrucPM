@@ -5,24 +5,24 @@ const { connectRabbitMQ } = require("./src/config/rabbitmq");
 const connectWS = require("./src/websocket/connectWS");
 
 async function start() {
-  try {
-    // Kết nối RabbitMQ
-    await connectRabbitMQ();
+    try {
+        // Kết nối RabbitMQ
+        await connectRabbitMQ();
 
-    // Khởi động Express HTTP server
-    const server = app.listen(process.env.PORT || 3000, () =>
-      console.log(
-        `Data Transformation Service chạy trên cổng ${
-          process.env.PORT || 3000
-        }`,
-      ),
-    );
+        // Khởi động Express HTTP server
+        const server = app.listen(process.env.PORT || 3000, () =>
+            console.log(
+                `Data Transformation Service chạy trên cổng ${
+                    process.env.PORT || 3000
+                }`,
+            ),
+        );
 
-    // Khởi động WebSocket server
-    connectWS(server);
+        // Khởi động WebSocket server
+        connectWS(server);
 
-    // Setup the actual database if not there yet.
-    const result = await pool.query(`
+        // Setup the actual database if not there yet.
+        const result = await pool.query(`
       CREATE TABLE IF NOT EXISTS candles (
           id SERIAL PRIMARY KEY,
           symbol VARCHAR(20) NOT NULL,
@@ -35,11 +35,11 @@ async function start() {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
   `);
-    console.log(result);
-  } catch (err) {
-    console.error("Service start error:", err);
-    process.exit(1);
-  }
+        console.log(result);
+    } catch (err) {
+        console.error("Service start error:", err);
+        process.exit(1);
+    }
 }
 
 start();
