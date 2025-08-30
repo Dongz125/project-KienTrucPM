@@ -1,24 +1,16 @@
 # Stage 1: The builder
 # Use a larger base image to handle the build process
-FROM node:22-alpine AS builder
+FROM node:22-alpine
+RUN apk add curl --no-cache
 
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm install
+RUN npm ci
 
 # Copy source code
 COPY ./src ./src
 COPY server.js ./server.js
 COPY test-candlestick.js ./test-candlestick.js
-
-# Stage 2: The final image
-# Use a minimal base image to run the application
-FROM node:22-alpine
-
-WORKDIR /app
-
-# Only copy the necessary files from the builder stage
-COPY --from=builder /app ./
 
 EXPOSE 3000
 
