@@ -76,14 +76,14 @@ services:
           "CMD",
           "mongosh",
           "--username",
-          "${MONGO_USER}",
+          "root",
           "--password",
-          "${MONGO_PASS}",
+          "rootpass",
           "--eval",
           "db.adminCommand('ping')",
         ]
       interval: 10s
-      timeout: 5s
+      timeout: 10s
       retries: 5
     volumes:
       - ./volumes/mongo:/data/db
@@ -94,7 +94,7 @@ services:
     build: ./crawler_service/
     container_name: "crawler-service"
     hostname: "crawler-service"
-    networks: ["db_network", "api_network", "rabbitmq_network"]
+    networks: [api_network", "rabbitmq_network"]
     healthcheck:
       test: ["CMD-SHELL", "curl http://localhost:3003/health"]
       interval: 30s
@@ -102,8 +102,10 @@ services:
       retries: 10
     ports:
       - 3003:3003
+    volumes:
+      - ./crawler_service/src:/app/src
     depends_on:
-      mongo:
+      rabbitmq:
         condition: service_healthy
 
   backtesting-service:
@@ -161,6 +163,8 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
 
   frontend:
     build: ./frontend/
@@ -205,4 +209,6 @@ services:
       data-transformation-service:
         condition: service_healthy
       authentication-service:
+        condition: service_healthy
+      crawler-service:
         condition: service_healthy
