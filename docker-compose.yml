@@ -94,7 +94,7 @@ services:
     build: ./crawler_service/
     container_name: "crawler-service"
     hostname: "crawler-service"
-    networks: [api_network", "rabbitmq_network"]
+    networks: ["api_network", "rabbitmq_network"]
     healthcheck:
       test: ["CMD-SHELL", "curl http://localhost:3003/health"]
       interval: 30s
