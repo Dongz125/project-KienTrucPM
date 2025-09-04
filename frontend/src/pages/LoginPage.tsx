@@ -4,8 +4,12 @@ interface LoginForm {
   email: string;
   password: string;
 }
+interface Props {
+  onGoRegister: () => void;
+  onLoginSuccess: () => void;
+}
 
-const Login: React.FC = () => {
+const Login: React.FC<Props> = ({onGoRegister,onLoginSuccess}) => {
   const [form, setForm] = useState<LoginForm>({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +29,7 @@ const Login: React.FC = () => {
 
       if (form.email === "admin@example.com" && form.password === "123456") {
         alert("Login thành công");
+        onLoginSuccess();
       } else {
         setError("Sai email hoặc password");
       }
@@ -40,7 +45,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
+    <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
       <form
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-2xl shadow-md w-96 space-y-4"
@@ -81,6 +86,9 @@ const Login: React.FC = () => {
           {loading ? "Đang đăng nhập..." : "Login"}
         </button>
       </form>
+      <button onClick={onGoRegister} className="text-blue-500 underline mt-2">
+        Chưa có tài khoản? Đăng ký
+      </button>
     </div>
   );
 };
