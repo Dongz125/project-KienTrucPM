@@ -1,11 +1,15 @@
-FROM python:3.10-slim
+FROM python:3.13-slim
 
+RUN apt-get update && apt-get install -y curl \
+  && curl -LsSf https://astral.sh/uv/install.sh | sh \
+  && rm -rf /var/lib/apt/lists/*
+
+ENV PATH="/root/.local/bin:$PATH"
 WORKDIR /app
 
-# Cài các dependency cần thiết
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt .
+RUN uv venv && uv pip install -r requirements.txt
 
 COPY . .
 
-CMD ["python", "app.py"]
+CMD ["uv", "run", "src/main.py"]

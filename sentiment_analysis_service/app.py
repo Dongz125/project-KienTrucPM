@@ -1,9 +1,11 @@
 from pymongo import MongoClient
 from transformers import pipeline
 
-MONGO_URI = "mongodb://mongo:27017"   # trong docker-compose nó connect được mongo container
-DB_NAME = "finance_app"
-RAW_COLLECTION = "raw_posts"
+MONGO_URI = (
+    "mongodb://mongo:27017"  # trong docker-compose nó connect được mongo container
+)
+DB_NAME = "promptpal"
+RAW_COLLECTION = "posts"
 ANALYZED_COLLECTION = "analyzed_posts"
 
 # Load FinBERT (model chuyên tài chính)
@@ -15,6 +17,7 @@ client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
 raw_col = db[RAW_COLLECTION]
 analyzed_col = db[ANALYZED_COLLECTION]
+
 
 def analyze_new_posts():
     new_posts = raw_col.find({"analyzed": {"$ne": True}})
@@ -29,13 +32,16 @@ def analyze_new_posts():
                 "user": post.get("user"),
                 "sentiment": result["label"],
                 "score": float(result["score"]),
-                "created_at": post["created_at"]
+                "created_at": post["created_at"],
             }
-            analyzed_col.update_one({"id": post["id"]}, {"$set": sentiment_data}, upsert=True)
+            analyzed_col.update_one(
+                {"id": post["id"]}, {"$set": sentiment_data}, upsert=True
+            )
             raw_col.update_one({"id": post["id"]}, {"$set": {"analyzed": True}})
             print(f"✅ Post {post['id']} → {result['label']} ({result['score']:.2f})")
         except Exception as e:
             print(f"⚠️ Error analyzing post {post['id']}: {e}")
+
 
 if __name__ == "__main__":
     analyze_new_posts()
