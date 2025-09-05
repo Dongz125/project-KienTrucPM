@@ -60,7 +60,7 @@ export async function crawlReddit(
           author: el.getAttribute("author") || "unknown",
           content: el.getAttribute("post-title") || "unknown",
           postedAt: ts
-            ? new Date(Number(ts) * 1000).toISOString()
+            ? new Date(ts).toISOString()
             : new Date(crawledAt).toISOString(),
           postId: el.getAttribute("id") || "none",
           url: postUrl

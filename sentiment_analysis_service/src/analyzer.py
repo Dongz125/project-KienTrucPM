@@ -2,6 +2,7 @@ import os
 import pika
 from pika.adapters.blocking_connection import BlockingChannel
 from pika.spec import Basic, BasicProperties
+from pika.frame import Method
 from transformers import (
     AutoTokenizer,
     AutoModelForSequenceClassification,
@@ -10,26 +11,20 @@ from transformers import (
 import threading
 import torch
 import json
-
-
-def on_message_callback_weehoo(
-    channel: BlockingChannel,
-    method: Basic.Deliver,
-    properties: BasicProperties,
-    body: bytes,
-) -> None:
-    """
-    Callback function for processing received messages.
-    """
-    msg = json.JSONDecoder().decode(body.decode())
-    print(msg)
-    channel.basic_ack()
+import time
+from pymongo.collection import Collection
 
 
 class AnalyzerState:
-    def __init__(self, model_name: str = "ProsusAI/finbert"):
-        self.model_name = model_name
+    channel: BlockingChannel
+    model_name: str
+    device: int
+    col: Collection
+
+    def __init__(self, col: Collection):
+        self.model_name = "ProsusAI/finBERT"
         self.device = 0 if torch.cuda.is_available() else -1
+        self.col = col
 
         # load tokenizer + model explicitly (safer than passing model name only)
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
@@ -61,9 +56,50 @@ class AnalyzerState:
         # bind the instance method as the callback
         self.channel.basic_consume(
             queue=self.queue_name,
+            on_message_callback=self.on_message_callback_weehoo,
             auto_ack=True,
-            on_message_callback=on_message_callback_weehoo,
         )
+
+    def on_message_callback_weehoo(
+        self,
+        channel: BlockingChannel,
+        method: Basic.Deliver,
+        properties: BasicProperties,
+        body: bytes,
+    ) -> None:
+        """
+        Callback function for processing received messages.
+        """
+        try:
+            messages: list[dict] = json.loads(body.decode("utf-8"))
+
+            # Iterate through each message (node) in the list
+            inserters = []
+            for node in messages:
+                # Extract the content from the message, assuming it's a dictionary
+                message_content = node.get("content", "")
+
+                if message_content:
+                    # Use the sentiment pipeline on the message content
+                    results = self.sentiment_pipeline(message_content)
+
+                    # Print the results
+                    print(f"Message: '{message_content}'")
+                    print(f"Sentiment Analysis Results: {results}")
+                    inserters.append(
+                        {
+                            "content": message_content,
+                            "sentiment": results,
+                            "timestamp": time.time(),
+                        }
+                    )
+
+            print(self.col.insert_many(inserters))
+
+        except json.JSONDecodeError as e:
+            print(f"Failed to decode JSON from message body: {e}")
+        except Exception as e:
+            print(f"An error occurred during sentiment analysis: {e}")
 
     def _start_thread(self):
         # Just to make sure it doesn't block the main thread
@@ -79,10 +115,9 @@ class AnalyzerState:
         except Exception as e:
             print("Consumer stopped:", e)
 
-    def is_running(self) -> bool:
-        queue = self.channel.queue_declare(queue=self.queue_name, passive=True)
-        message_count = queue.method.message_count
-        return message_count > 0
+    def query_status(self) -> dict:
+        queue: Method = self.channel.queue_declare(queue=self.queue_name)
+        return {"count": queue.method.message_count}
 
     def close(self):
         self.connection.close()
