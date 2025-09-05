@@ -11,6 +11,7 @@ async function getCrawl(req: express.Request, res: express.Response) {
 
   const app = getCrawlerService();
   app.sendMessage([...redditResults, ...stocktwitResults]);
+
   res.status(200).json({
     reddit: redditResults,
     stocktwit: stocktwitResults,
