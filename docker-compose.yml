@@ -89,6 +89,7 @@ services:
       - ./volumes/mongo:/data/db
     ports:
       - 27017:27017
+    command: mongod --quiet
 
   sentiment-analysis-service:
     build: ./sentiment_analysis_service/
@@ -115,13 +116,12 @@ services:
     container_name: "crawler-service"
     hostname: "crawler-service"
     networks: ["api_network", "rabbitmq_network"]
+    env_file: ./crawler_service/.env
     healthcheck:
-      test: ["CMD-SHELL", "curl http://localhost:3003/health"]
+      test: ["CMD-SHELL", "curl http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 10
-    ports:
-      - 3003:3003
     volumes:
       - ./crawler_service/src:/app/src
     depends_on:
@@ -209,14 +209,9 @@ services:
     container_name: "api-gateway"
     hostname: "gateway"
     networks: ["api_network"]
-    environment:
-      JWT_SECRET: ${JWT_SECRET}
-      DATA_TRANSFORMATION_SERVICE: ${DATA_TRANSFORMATION_SERVICE}
-      AUTHENTICATION_SERVICE: ${AUTHENTICATION_SERVICE}
-      BACKTESTING_SERVICE: ${BACKTESTING_SERVICE}
-      CRAWLER_SERVICE: ${CRAWLER_SERVICE}
+    env_file: ./api_gateway/.env
     healthcheck:
-      test: ["CMD-SHELL", "curl http://localhost:80/health"]
+      test: ["CMD-SHELL", "curl http://localhost/health"]
       interval: 30s
       timeout: 30s
       retries: 10
@@ -227,8 +222,10 @@ services:
       - ./api_gateway/go.mod:/app/go.mod
     depends_on:
       data-transformation-service:
-        condition: service_healthy
+        condition: service_started
       authentication-service:
-        condition: service_healthy
+        condition: service_started
       crawler-service:
-        condition: service_healthy
+        condition: service_started
+      sentiment-analysis-service:
+        condition: service_started

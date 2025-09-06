@@ -25,6 +25,6 @@ RUN npm ci
 COPY . .
 
 # Run
-EXPOSE 3003
+EXPOSE 80
 CMD ["npx", "tsx", "src/index.ts"]
 

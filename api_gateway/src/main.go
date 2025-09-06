@@ -10,24 +10,20 @@ import (
 	"luny.dev/api-gateway/src/routes"
 )
 
+func CheckEnvironmentValue(val string) {
+	key := os.Getenv(val)
+	if key == "" {
+		log.Fatalf("%s environment variable is not set. Please set it and try again.\n", val)
+	}
+	fmt.Printf("Using %s = %s\n", val, key)
+}
+
 func main() {
-	secretKeyStr := os.Getenv("JWT_SECRET")
-	if secretKeyStr == "" {
-		log.Fatal("JWT_SECRET environment variable is not set. Please set it and try again.")
-	}
-	fmt.Println("Got JWT_SECRET", secretKeyStr)
-
-	transformationService := os.Getenv("DATA_TRANSFORMATION_SERVICE")
-	if transformationService == "" {
-		log.Fatal("DATA_TRANSFORMATION_SERVICE environment variable is not set.")
-	}
-	fmt.Printf("using data_transformation_service = %s\n", transformationService)
-
-	authService := os.Getenv("AUTHENTICATION_SERVICE")
-	if authService == "" {
-		log.Fatal("AUTHENTICATION_SERVICE environment variable is not set.")
-	}
-	fmt.Printf("using auth_service = %s\n", authService)
+	CheckEnvironmentValue("JWT_SECRET")
+	CheckEnvironmentValue("DATA_TRANSFORMATION_SERVICE")
+	CheckEnvironmentValue("AUTHENTICATION_SERVICE")
+	CheckEnvironmentValue("CRAWLER_SERVICE")
+	CheckEnvironmentValue("SENTIMENT_ANALYSIS_SERVICE")
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/fake", middlewares.CORS(routes.FakeJWTHandler))
@@ -37,6 +33,7 @@ func main() {
 	mux.HandleFunc("/register", middlewares.CORS(routes.RegisterHandler))
 	mux.HandleFunc("/refresh", middlewares.CORS(routes.RefreshHandler))
 	mux.HandleFunc("/logout", middlewares.CORS(routes.LogoutHandler))
+	mux.HandleFunc("/crawl/", middlewares.CORS(routes.CrawlService))
 
 	fmt.Println("Starting API Gateway")
 	err := http.ListenAndServe(":80", mux)
