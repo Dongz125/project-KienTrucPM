@@ -23,7 +23,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	// How to pipe the request from ${url}/auth/login
 	url := os.Getenv("AUTHENTICATION_SERVICE")
-	targetURL := fmt.Sprintf("%s/api/auth/login", url)
+	targetURL := fmt.Sprintf("http://%s/api/auth/login", url)
 
 	// Create a new request to the auth service, reusing the body
 	req, err := http.NewRequest(http.MethodPost, targetURL, r.Body)
@@ -62,7 +62,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	// How to pipe the request from ${url}/auth/login
 	url := os.Getenv("AUTHENTICATION_SERVICE")
-	targetURL := fmt.Sprintf("%s/api/auth/register", url)
+	targetURL := fmt.Sprintf("http://%s/api/auth/register", url)
 
 	// Create a new request to the auth service, reusing the body
 	req, err := http.NewRequest(http.MethodPost, targetURL, r.Body)
@@ -101,7 +101,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	// How to pipe the request from ${url}/auth/login
 	url := os.Getenv("AUTHENTICATION_SERVICE")
-	targetURL := fmt.Sprintf("%s/api/auth/logout", url)
+	targetURL := fmt.Sprintf("http://%s/api/auth/logout", url)
 
 	// Create a new request to the auth service, reusing the body
 	req, err := http.NewRequest(http.MethodPost, targetURL, r.Body)
@@ -140,7 +140,7 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 
 	// How to pipe the request from ${url}/auth/login
 	url := os.Getenv("AUTHENTICATION_SERVICE")
-	targetURL := fmt.Sprintf("%s/api/auth/refresh", url)
+	targetURL := fmt.Sprintf("http://%s/api/auth/refresh", url)
 
 	// Create a new request to the auth service, reusing the body
 	req, err := http.NewRequest(http.MethodPost, targetURL, r.Body)

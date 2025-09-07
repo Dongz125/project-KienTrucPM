@@ -1,7 +1,20 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router";
 
-function StatusCard(props: { name: string; status?: boolean }) {
-  if (!props.status) {
+function StatusCard(props: {
+  name: string;
+  status: "loading" | "healthy" | "unhealthy";
+}) {
+  if (props.status == "loading") {
+    return (
+      <div className="flex flex-row rounded-md justify-between items-center px-6 py-4 gap-4 bg-gray-200 border-2 border-gray-400">
+        <span className="font-semibold">{props.name}</span>
+        <span className="text-gray-700">Unknown</span>
+      </div>
+    );
+  }
+
+  if (props.status == "unhealthy") {
     return (
       <div className="flex flex-row rounded-md justify-between items-center px-6 py-4 gap-4 bg-red-200 border-2 border-red-400">
         <span className="font-semibold">{props.name}</span>
@@ -18,53 +31,108 @@ function StatusCard(props: { name: string; status?: boolean }) {
   );
 }
 
+function AuthHeader() {
+  const [user, setUser] = useState<
+    | {
+        id: number;
+        email: string;
+        full_name: string;
+      }
+    | undefined
+  >(undefined);
+
+  useEffect(() => {
+    const u = window.localStorage.getItem("user");
+    if (u && JSON.parse(u)) {
+      setUser(JSON.parse(u));
+    }
+  }, []);
+
+  return (
+    <header className="px-6 py-2 flex items-center justify-center">
+      {user ? (
+        <p>
+          Hello {user.full_name} at {user.email}
+        </p>
+      ) : (
+        <p>Not logged in</p>
+      )}
+    </header>
+  );
+}
+
 export default function HomePage() {
+  const defaultStatus = useRef([
+    {
+      service: "crawler_service",
+      healthy: false,
+    },
+    {
+      service: "authentication_service",
+      healthy: false,
+    },
+    {
+      service: "data_transformation_service",
+      healthy: false,
+    },
+    {
+      service: "sentiment_analysis_service",
+      healthy: false,
+    },
+    {
+      service: "backtesting_service",
+      healthy: false,
+    },
+  ]);
+  const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<{ service: string; healthy: boolean }[]>(
-    [
-      {
-        service: "crawler_service",
-        healthy: false,
-      },
-      {
-        service: "authentication_service",
-        healthy: false,
-      },
-      {
-        service: "data_transformation_service",
-        healthy: false,
-      },
-      {
-        service: "sentiment_analysis_service",
-        healthy: false,
-      },
-      {
-        service: "backtesting_service",
-        healthy: false,
-      },
-    ],
+    defaultStatus.current,
   );
 
-  function refetch() {
-    console.log(import.meta.env.VITE_API_URL);
+  const refetch = useCallback(() => {
+    setLoading(true);
     fetch(`${import.meta.env.VITE_API_URL}/health`)
       .then((res) => res.json())
       .then((json) => {
         console.log(json);
         setStatus(json.services);
+        setLoading(false);
       })
       .catch((err) => {
         console.log(err);
         alert("An error happened while fetching");
+        setStatus(defaultStatus.current);
+        setLoading(false);
       });
-  }
+  }, []);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   return (
     <div className="flex items-center justify-center w-full flex-col">
-      <header className="py-2 px-4 text-center w-full text-3xl font-bold">
-        PromptPal Status
-      </header>
+      <nav className="py-2 px-4 text-center w-full items-center justify-center flex flex-row gap-2">
+        <Link to={"/login"} className="hover:text-blue-600 hover:underline">
+          Login
+        </Link>
+        <Link to={"/register"} className="hover:text-blue-600 hover:underline">
+          Register
+        </Link>
+        <Link to={"/trades"} className="hover:text-blue-600 hover:underline">
+          Trades
+        </Link>
+        <Link to={"/crawl"} className="hover:text-blue-600 hover:underline">
+          Crawler
+        </Link>
+        <Link to={"/backtest"} className="hover:text-blue-600 hover:underline">
+          Backtest
+        </Link>
+      </nav>
 
-      <section className="p-6 flex flex-col items-center justify-center w-full lg:w-2/3 xl:w-1/2 gap-4">
+      <AuthHeader />
+
+      <section className="p-6 flex flex-col items-center justify-center w-full lg:w-2/3 xl:w-1/2 gap-4 py-12">
         <div className="flex flex-row items-center gap-2">
           <h2>Service Statuses</h2>
           <button className="size-6 cursor-pointer" onClick={refetch}>
@@ -82,7 +150,9 @@ export default function HomePage() {
           {status.map((val) => (
             <StatusCard
               name={val.service}
-              status={val.healthy}
+              status={
+                loading ? "loading" : val.healthy ? "healthy" : "unhealthy"
+              }
               key={val.service}
             />
           ))}

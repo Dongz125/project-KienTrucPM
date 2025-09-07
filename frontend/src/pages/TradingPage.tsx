@@ -5,6 +5,7 @@ import {
   createChart,
   type CandlestickData,
 } from "lightweight-charts";
+import { Link } from "react-router";
 
 interface SymbolData {
   open: number;
@@ -129,6 +130,24 @@ export default function TradingPage() {
 
   return (
     <div className="w-full p-6 flex flex-col items-center justify-center gap-4">
+      <nav className="py-2 px-4 text-center w-full items-center justify-center flex flex-row gap-2">
+        <Link to={"/login"} className="hover:text-blue-600 hover:underline">
+          Login
+        </Link>
+        <Link to={"/register"} className="hover:text-blue-600 hover:underline">
+          Register
+        </Link>
+        <Link to={"/trades"} className="text-blue-600">
+          Trades
+        </Link>
+        <Link to={"/crawl"} className="hover:text-blue-600 hover:underline">
+          Crawler
+        </Link>
+        <Link to={"/backtest"} className="hover:text-blue-600 hover:underline">
+          Backtest
+        </Link>
+      </nav>
+
       {wsState}
 
       <section className="flex flex-col gap-4 items-center w-full lg:w-2/3 xl:w-1/2">
