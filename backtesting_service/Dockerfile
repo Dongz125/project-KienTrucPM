@@ -6,5 +6,5 @@ RUN npm ci
 
 COPY . .
 EXPOSE 3002
-CMD ["node", "server.js""]
+CMD ["node", "server.js"]
 

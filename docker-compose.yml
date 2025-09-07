@@ -89,7 +89,7 @@ services:
       - ./volumes/mongo:/data/db
     ports:
       - 27017:27017
-    command: mongod --quiet
+    command: mongod --quiet --logpath /dev/null
 
   sentiment-analysis-service:
     build: ./sentiment_analysis_service/

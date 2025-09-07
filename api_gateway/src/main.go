@@ -22,6 +22,7 @@ func main() {
 	CheckEnvironmentValue("JWT_SECRET")
 	CheckEnvironmentValue("DATA_TRANSFORMATION_SERVICE")
 	CheckEnvironmentValue("AUTHENTICATION_SERVICE")
+	CheckEnvironmentValue("BACKTESTING_SERVICE")
 	CheckEnvironmentValue("CRAWLER_SERVICE")
 	CheckEnvironmentValue("SENTIMENT_ANALYSIS_SERVICE")
 

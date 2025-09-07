@@ -1,6 +1,0 @@
-github.com/Azure/go-amqp v1.4.0 h1:Xj3caqi4comOF/L1Uc5iuBxR/pB6KumejC01YQOqOR4=
-github.com/Azure/go-amqp v1.4.0/go.mod h1:vZAogwdrkbyK3Mla8m/CxSc/aKdnTZ4IbPxl51Y5WZE=
-github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
-github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/rabbitmq/rabbitmq-amqp-go-client v0.1.1 h1:1J5coTThj/aUtXIcF3MPutixEuWS8wNimYhB1yvdS24=
-github.com/rabbitmq/rabbitmq-amqp-go-client v0.1.1/go.mod h1:sWDACr1vf9I61KNzh3tJ5pIdKXYsMXNrRpuayaNaKxg=
