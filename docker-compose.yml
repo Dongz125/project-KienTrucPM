@@ -60,29 +60,91 @@ services:
       retries: 5
 
   mongo:
-    image: "mongo:8-noble"
+    build: ./mongo/
     container_name: "mongo"
     hostname: "mongo"
     networks: ["db_network"]
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASS}
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpass
+      MONGO_INITDB_DATABASE: promptpal
+      MONGO_USER: ${MONGO_USER}
+      MONGO_PASS: ${MONGO_PASS}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "--username",
+          "root",
+          "--password",
+          "rootpass",
+          "--eval",
+          "db.adminCommand('ping')",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
     volumes:
       - ./volumes/mongo:/data/db
     ports:
       - 27017:27017
+    command: mongod --quiet
 
-  mongo-express:
-    image: "mongo-express:1.0-20-alpine3.19"
-    container_name: "mongo-express"
-    hostname: "mongo-express"
-    networks: ["db_network"]
-    environment:
-      ME_CONFIG_MONGODB_SERVER: mongo
-      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER}
-      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASS}
+  sentiment-analysis-service:
+    build: ./sentiment_analysis_service/
+    container_name: "sentiment-analysis-service"
+    hostname: "sentiment-analysis-service"
+    networks: ["api_network", "db_network", "rabbitmq_network"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://localhost:3004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
     ports:
-      - 27018:8081
+      - 3004:3004
+    volumes:
+      - ./sentiment_analysis_service/src:/app/src
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+
+  crawler-service:
+    build: ./crawler_service/
+    container_name: "crawler-service"
+    hostname: "crawler-service"
+    networks: ["api_network", "rabbitmq_network"]
+    env_file: ./crawler_service/.env
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    volumes:
+      - ./crawler_service/src:/app/src
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  backtesting-service:
+    build: ./backtesting_service/
+    container_name: "backtesting-service"
+    hostname: "backtesting-service"
+    networks: ["db_network", "api_network", "rabbitmq_network"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    ports:
+      - 3002:3002
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   authentication-service:
     build: ./authentication_service/
@@ -121,6 +183,8 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
 
   frontend:
     build: ./frontend/
@@ -145,12 +209,9 @@ services:
     container_name: "api-gateway"
     hostname: "gateway"
     networks: ["api_network"]
-    environment:
-      JWT_SECRET: ${JWT_SECRET}
-      DATA_TRANSFORMATION_SERVICE: ${DATA_TRANSFORMATION_SERVICE}
-      AUTHENTICATION_SERVICE: ${AUTHENTICATION_SERVICE}
+    env_file: ./api_gateway/.env
     healthcheck:
-      test: ["CMD-SHELL", "curl http://localhost:80/health"]
+      test: ["CMD-SHELL", "curl http://localhost/health"]
       interval: 30s
       timeout: 30s
       retries: 10
@@ -161,6 +222,10 @@ services:
       - ./api_gateway/go.mod:/app/go.mod
     depends_on:
       data-transformation-service:
-        condition: service_healthy
+        condition: service_started
       authentication-service:
-        condition: service_healthy
+        condition: service_started
+      crawler-service:
+        condition: service_started
+      sentiment-analysis-service:
+        condition: service_started
