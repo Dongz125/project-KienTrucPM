@@ -39,7 +39,7 @@ function SentimentCard(props: SentimentData) {
         <SentimentLabel key={idx} {...val} />
       ))}
       <span className="text-gray-500 text-sm">
-        {new Date(props.timestamp).toLocaleString()}
+        {new Date(props.timestamp * 1000).toLocaleString()}
       </span>
     </div>
   );

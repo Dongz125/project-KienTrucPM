@@ -44,10 +44,6 @@ export default function NavigationBar(props: { active?: string }) {
       href: "/sentiment",
       label: "Sentiment",
     },
-    {
-      href: "/backtest",
-      label: "Backtest",
-    },
   ];
 
   return (

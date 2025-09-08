@@ -4,7 +4,7 @@ import NavigationBar from "../components/NavigationBar";
 
 function CrawledPost(props: { url: string; author: string; content: string }) {
   return (
-    <div className="px-6 py-2 rounded-md border border-gray-300 shadow-md flex flex-col gap-2">
+    <div className="p-6 rounded-md border border-gray-300 shadow-md flex flex-col gap-2">
       <h2 className="text-xl font-semibold">{props.author}</h2>
       <p className="text-gray-700">{props.content}</p>
       <a href={props.url} className="text-blue-600">
@@ -47,12 +47,12 @@ export default function CrawlerPage() {
   }, []);
 
   return (
-    <div className="flex items-center justify-center w-full flex-col">
+    <div className="flex items-center justify-center w-full flex-col gap-4">
       <NavigationBar active="/crawl" />
 
       <AuthHeader />
 
-      <section className="flex w-full items-center justify-center flex-col lg:w-2/3 xl:w-1/2">
+      <section className="flex w-full items-center justify-center flex-col lg:w-2/3 xl:w-1/2 gap-4">
         <button
           className="px-4 py-2 text-white rounded-md bg-blue-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
           disabled={loading}
@@ -61,7 +61,7 @@ export default function CrawlerPage() {
           {loading ? "Crawling..." : "Crawl"}
         </button>
 
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-2">
           {crawledData.map((node) => (
             <CrawledPost {...node} key={node.content} />
           ))}
