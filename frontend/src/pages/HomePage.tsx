@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router";
+import AuthHeader from "../components/AuthHeader";
+import NavigationBar from "../components/NavigationBar";
 
 function StatusCard(props: {
   name: string;
@@ -28,36 +29,6 @@ function StatusCard(props: {
       <span className="font-semibold">{props.name}</span>
       <span className="text-green-700">Healthy</span>
     </div>
-  );
-}
-
-function AuthHeader() {
-  const [user, setUser] = useState<
-    | {
-        id: number;
-        email: string;
-        full_name: string;
-      }
-    | undefined
-  >(undefined);
-
-  useEffect(() => {
-    const u = window.localStorage.getItem("user");
-    if (u && JSON.parse(u)) {
-      setUser(JSON.parse(u));
-    }
-  }, []);
-
-  return (
-    <header className="px-6 py-2 flex items-center justify-center">
-      {user ? (
-        <p>
-          Hello {user.full_name} at {user.email}
-        </p>
-      ) : (
-        <p>Not logged in</p>
-      )}
-    </header>
   );
 }
 
@@ -112,23 +83,7 @@ export default function HomePage() {
 
   return (
     <div className="flex items-center justify-center w-full flex-col">
-      <nav className="py-2 px-4 text-center w-full items-center justify-center flex flex-row gap-2">
-        <Link to={"/login"} className="hover:text-blue-600 hover:underline">
-          Login
-        </Link>
-        <Link to={"/register"} className="hover:text-blue-600 hover:underline">
-          Register
-        </Link>
-        <Link to={"/trades"} className="hover:text-blue-600 hover:underline">
-          Trades
-        </Link>
-        <Link to={"/crawl"} className="hover:text-blue-600 hover:underline">
-          Crawler
-        </Link>
-        <Link to={"/backtest"} className="hover:text-blue-600 hover:underline">
-          Backtest
-        </Link>
-      </nav>
+      <NavigationBar active="/" />
 
       <AuthHeader />
 

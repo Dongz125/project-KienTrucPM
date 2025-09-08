@@ -35,6 +35,7 @@ func main() {
 	mux.HandleFunc("/refresh", middlewares.CORS(routes.RefreshHandler))
 	mux.HandleFunc("/logout", middlewares.CORS(routes.LogoutHandler))
 	mux.HandleFunc("/crawl/", middlewares.CORS(routes.CrawlService))
+	mux.HandleFunc("/sentiment/", middlewares.CORS(routes.SentimentService))
 
 	fmt.Println("Starting API Gateway")
 	err := http.ListenAndServe(":80", mux)
