@@ -1,46 +1,24 @@
-import { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import LoadingPage from "./pages/LoadingPage";
+import { BrowserRouter, Routes, Route } from "react-router";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import TradingViewPage from "./pages/TradingViewPage";
+import TradingPage from "./pages/TradingPage";
+import CrawlerPage from "./pages/CrawlerPage";
+import SentimentPage from "./pages/SentimentPage";
 
 function App() {
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        fetch(`${import.meta.env.VITE_API_URL}/hello`)
-            .then((res) => {
-                if (res.status === 200) {
-                    return res.text();
-                }
-                return Promise.reject("API error");
-            })
-            .then((txt) => {
-                console.log(txt);
-                setLoading(false);
-            })
-            .catch((err) => {
-                console.error(err);
-                setLoading(false);
-            });
-    }, []);
-
-    if (loading) {
-        return <LoadingPage />;
-    }
-
-    return (
-        <BrowserRouter>
-            <Routes>
-                <Route path="/" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/home" element={<HomePage />} />
-                <Route path="/trading" element={<TradingViewPage />} />
-            </Routes>
-        </BrowserRouter>
-    );
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/trades" element={<TradingPage />} />
+        <Route path="/crawl" element={<CrawlerPage />} />
+        <Route path="/sentiment" element={<SentimentPage />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;

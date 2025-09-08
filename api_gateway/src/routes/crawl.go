@@ -9,10 +9,10 @@ import (
 	"os"
 )
 
-var proxy *httputil.ReverseProxy
+var crawlerProxy *httputil.ReverseProxy
 
-func SetupProxy() {
-	if proxy != nil {
+func SetupCrawlerProxy() {
+	if crawlerProxy != nil {
 		return
 	}
 
@@ -22,9 +22,9 @@ func SetupProxy() {
 		return
 	}
 
-	proxy = httputil.NewSingleHostReverseProxy(target)
-	originalDirector := proxy.Director
-	proxy.Director = func(req *http.Request) {
+	crawlerProxy = httputil.NewSingleHostReverseProxy(target)
+	originalDirector := crawlerProxy.Director
+	crawlerProxy.Director = func(req *http.Request) {
 		originalDirector(req)
 		oldPath := req.URL.Path
 		req.URL.Path = req.URL.Path[len("/crawl"):]
@@ -33,6 +33,6 @@ func SetupProxy() {
 }
 
 func CrawlService(w http.ResponseWriter, r *http.Request) {
-	SetupProxy()
-	proxy.ServeHTTP(w, r)
+	SetupCrawlerProxy()
+	crawlerProxy.ServeHTTP(w, r)
 }

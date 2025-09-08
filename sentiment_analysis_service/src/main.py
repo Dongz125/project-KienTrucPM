@@ -1,12 +1,40 @@
-from flask import Flask
+from flask import Flask, jsonify
 from dotenv import load_dotenv
 from analyzer import AnalyzerState
 from pymongo import MongoClient
+from pymongo.collection import Collection
 import os
 
 
 app = Flask(__name__)
 analyzer_state = None
+collection: Collection | None = None
+
+
+@app.route("/results", methods=["GET"])
+def results():
+    if collection is None:
+        # Return an error if the database connection failed
+        return jsonify({"error": "Database connection failed"}), 500
+
+    try:
+        # Find the first 100 documents in the collection
+        documents = collection.find().limit(100)
+
+        # Convert the MongoDB cursor to a list of dictionaries.
+        # It's crucial to handle the "_id" field, which is a BSON ObjectId
+        # and not JSON serializable. We convert it to a string.
+        results_list = []
+        for doc in documents:
+            # Convert ObjectId to string
+            doc["_id"] = str(doc["_id"])
+            results_list.append(doc)
+
+        # Use jsonify to automatically serialize the list to a JSON response
+        # and set the Content-Type header to application/json.
+        return jsonify(results_list), 200
+    except Exception:
+        return jsonify({"error": "internal server error"}), 500
 
 
 @app.route("/health", methods=["GET"])
@@ -31,9 +59,9 @@ if __name__ == "__main__":
 
     mongoclient = MongoClient(os.getenv("MONGODB_URL"))
     db = mongoclient.get_database()
-    col = db["sentiment"]
+    collection = db["sentiment"]
 
-    analyzer_state = AnalyzerState(col)
+    analyzer_state = AnalyzerState(collection)
     analyzer_state._start_thread()
     print("Starting server")
 
